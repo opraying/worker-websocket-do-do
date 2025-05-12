@@ -3,6 +3,12 @@ import { DurableObject } from "cloudflare:workers"
 export class TestDurableObject extends DurableObject<Env> {
   private worker2WS: WebSocket | null = null
 
+  private broadcast(msg: any) {
+    this.ctx.getWebSockets().forEach((ws) => {
+      ws.send(msg)
+    })
+  }
+
   async fetch(_request: Request): Promise<Response> {
     const webSocketPair = new WebSocketPair()
     const [websocketClient, websocketServer] = Object.values(webSocketPair)
@@ -23,7 +29,8 @@ export class TestDurableObject extends DurableObject<Env> {
     this.worker2WS = worker2Ws
 
     this.worker2WS.addEventListener("message", (event) => {
-      console.log("received worker2 message", event.data)
+      const message = event.data
+      this.broadcast("received worker2 message: " + message)
     })
 
     this.ctx.acceptWebSocket(websocketServer)
@@ -35,7 +42,7 @@ export class TestDurableObject extends DurableObject<Env> {
   }
 
   webSocketMessage(_ws: WebSocket, message: string | ArrayBuffer): void | Promise<void> {
-    console.log("Worker1 received message:", message)
+    this.broadcast("received worker1 message: " + message)
     this.worker2WS?.send(message)
   }
 

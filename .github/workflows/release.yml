@@ -2,9 +2,9 @@ name: 🚀 Release
 
 on:
   push:
-    branches: [ main, dev ]
+    branches: [main, dev]
   pull_request:
-    branches: [ dev ]
+    branches: [dev]
 
 permissions:
   contents: read
@@ -48,11 +48,8 @@ jobs:
       - name: 🔍 Type check
         run: bun run typecheck
 
-      - name: 🏷️ Set project name
-        run: echo "PROJECT_NAME=$(jq -r .name package.json)" >> $GITHUB_ENV
-
       - name: 🚀 Deploy Worker-1 to Cloudflare
-        id: deploy-worker
+        id: deploy-worker-1
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -70,18 +67,22 @@ jobs:
       - name: 📢 Send deployment status
         if: always()
         uses: actions/github-script@v7
-        env:
-          DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const status = '${{ steps.deploy.outcome }}' === 'success' ? 'success' : 'failure';
+            const worker1Status = '${{ steps.deploy-worker-1.outcome }}' === 'success';
+            const worker2Status = '${{ steps.deploy-worker-2.outcome }}' === 'success';
+            const status = worker1Status && worker2Status ? 'success' : 'failure';
+            const message = status === 'failure' 
+              ? '❌ Worker-WebSocket-DO-DO deployment failed' 
+              : '🚀 Worker-WebSocket-DO-DO has been released successfully';
+
             await fetch("${{ secrets.DISCORD_DEPLOY_WEBHOOK }}", {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json'
               },
               body: JSON.stringify({
-                content: status === 'failure' ? '❌ ${{ env.PROJECT_NAME }} deployment failed' : '🚀 ${{ env.PROJECT_NAME }} has been released. ${{ env.DEPLOYMENT_URL }}'
+                content: message
               })
             });

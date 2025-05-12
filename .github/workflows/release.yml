@@ -51,7 +51,7 @@ jobs:
       - name: 🏷️ Set project name
         run: echo "PROJECT_NAME=$(jq -r .name package.json)" >> $GITHUB_ENV
 
-      - name: 🚀 Deploy Worker-2 to Cloudflare
+      - name: 🚀 Deploy Worker-1 to Cloudflare
         id: deploy-worker
         uses: cloudflare/wrangler-action@v3
         with:

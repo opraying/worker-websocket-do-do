@@ -1,6 +1,5 @@
 {
   "name": "worker-websocket-do-do",
-  "module": "src/index.ts",
   "type": "module",
   "packageManager": "bun@1.2.12",
   "scripts": {
@@ -8,7 +7,7 @@
     "lint-fix": "bun lint --fix",
     "test": "vitest",
     "typecheck": "tsc -p apps/worker-1/tsconfig.json -p apps/worker-2/tsconfig.json --noEmit",
-    "madge": "madge --ts-config ./apps/worker-1/tsconfig.json --circular --no-color --no-spinner --extensions ts,tsx src",
+    "madge": "madge --ts-config ./apps/worker-1/tsconfig.json --circular --no-color --no-spinner --extensions ts,tsx apps",
     "dev": "wrangler dev --config apps/worker-1/wrangler.jsonc --config apps/worker-2/wrangler.jsonc",
     "cf-typegen": "wrangler types --cwd ./apps/worker-1 --config ./wrangler.jsonc && wrangler types --cwd apps/worker-2 --config ./wrangler.jsonc"
   },

@@ -1,10 +1,10 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "baseUrl": "./",
+    "baseUrl": "../../",
     "types": ["./worker-configuration.d.ts"],
     "paths": {
+      "@shared/*": ["packages/shared/*"],
       "@/*": ["apps/worker2/*"]
     }
   },

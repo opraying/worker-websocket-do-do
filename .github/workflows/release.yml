@@ -23,30 +23,25 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: 💾 Cache dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.bun/install/cache
-          key: ${{ runner.os }}-${{ matrix.bun }}-bun-${{ hashFiles('**/bun.lockb') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.bun }}-bun-
+      - name: ⚙️ Setup pnpm
+        uses: pnpm/action-setup@v2
 
-      - name: 🥟 Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - name: 🚧 Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          bun-version: latest
+          cache: "pnpm"
 
       - name: 📦 Install dependencies
-        run: bun install
+        run: pnpm install
 
       - name: 🧹 Lint code
-        run: bun run lint
+        run: pnpm run lint
 
       - name: 🕸️ Check dependencies
-        run: bun run madge
+        run: pnpm run madge
 
       - name: 🔍 Type check
-        run: bun run typecheck
+        run: pnpm run typecheck
 
       - name: 🚀 Deploy Worker-1 to Cloudflare
         id: deploy-worker-1
@@ -73,8 +68,8 @@ jobs:
             const worker1Status = '${{ steps.deploy-worker-1.outcome }}' === 'success';
             const worker2Status = '${{ steps.deploy-worker-2.outcome }}' === 'success';
             const status = worker1Status && worker2Status ? 'success' : 'failure';
-            const message = status === 'failure' 
-              ? '❌ Worker-WebSocket-DO-DO deployment failed' 
+            const message = status === 'failure'
+              ? '❌ Worker-WebSocket-DO-DO deployment failed'
               : '🚀 Worker-WebSocket-DO-DO has been released successfully';
 
             await fetch("${{ secrets.DISCORD_DEPLOY_WEBHOOK }}", {

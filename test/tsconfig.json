@@ -1,0 +1,13 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": "../",
+    "paths": {
+      "@shared/*": ["packages/shared/*"],
+      "@apps/worker-1/*": ["apps/worker-1/*"],
+      "@apps/worker-2/*": ["apps/worker-2/*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": []
+}

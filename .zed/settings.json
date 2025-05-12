@@ -17,15 +17,7 @@
       }
     },
     "JSONC": {
-      "language_servers": [
-        "eslint",
-        "cspell",
-        "json-language-server",
-        "prettier",
-        "!biome",
-        "!vtsls",
-        "!typescript-language-server"
-      ],
+      "language_servers": ["eslint", "cspell", "prettier", "!biome", "!vtsls", "!typescript-language-server"],
       "formatter": "prettier",
       "format_on_save": "on",
       "code_actions_on_format": {

@@ -51,12 +51,21 @@ jobs:
       - name: 🏷️ Set project name
         run: echo "PROJECT_NAME=$(jq -r .name package.json)" >> $GITHUB_ENV
 
-      - name: 🚀 Deploy to Cloudflare
+      - name: 🚀 Deploy Worker-2 to Cloudflare
         id: deploy
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          command: deploy --name=${{ env.PROJECT_NAME }}
+          command: deploy
+          workingDirectory: apps/worker-1
+
+      - name: 🚀 Deploy Worker-2 to Cloudflare
+        id: deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          command: deploy
+          workingDirectory: apps/worker-2
 
       - name: 📢 Send deployment status
         if: always()
@@ -72,7 +81,7 @@ jobs:
               headers: {
                 'Content-Type': 'application/json'
               },
-              body: JSON.stringify({ 
+              body: JSON.stringify({
                 content: status === 'failure' ? '❌ ${{ env.PROJECT_NAME }} deployment failed' : '🚀 ${{ env.PROJECT_NAME }} has been released. ${{ env.DEPLOYMENT_URL }}'
               })
             });

@@ -21,9 +21,6 @@
 		"strict": true,
 		"strictNullChecks": true,
 		"plugins": [{ "name": "@effect/language-service" }],
-		"types": [],
-		"paths": {
-			"@/*": ["src/*.ts"]
-		}
+		"types": []
 	}
 }

@@ -3,6 +3,8 @@
 README.md
 SECURITY.md
 
+.github/workflows
+
 flake.nix
 flake.lock
 package.json

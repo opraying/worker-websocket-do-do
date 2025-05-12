@@ -1,0 +1,26 @@
+{
+  "name": "worker-websocket-do-worker-2",
+  "main": "index.ts",
+  "compatibility_date": "2025-04-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "TestDurableObject",
+        "class_name": "TestDurableObject"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["TestDurableObject"]
+    }
+  ],
+  "services": [
+    {
+      "binding": "Worker1",
+      "service": "worker-websocket-do-worker-1"
+    }
+  ]
+}

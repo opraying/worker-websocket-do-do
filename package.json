@@ -2,17 +2,15 @@
   "name": "worker-websocket-do-do",
   "module": "src/index.ts",
   "type": "module",
-  "packageManager": "bun@1.1.42",
+  "packageManager": "bun@1.2.12",
   "scripts": {
-    "lint": "eslint \"{src,test,scripts}/**/*.{ts,mjs}\" \"**/*.{md,json,jsonc}\"",
+    "lint": "eslint \"apps/**/*.{ts,mjs}\" \"**/*.{md,json,jsonc}\"",
     "lint-fix": "bun lint --fix",
     "test": "vitest",
-    "typecheck": "tsc -p tsconfig.src.json --noEmit",
-    "madge": "madge --ts-config ./tsconfig.src.json --circular --no-color --no-spinner --extensions ts,tsx src",
-    "deploy": "wrangler deploy --name=$(jq -r .name package.json)",
-    "dev": "wrangler dev",
-    "start": "wrangler dev",
-    "cf-typegen": "wrangler types"
+    "typecheck": "tsc -p apps/worker-1/tsconfig.json -p apps/worker-2/tsconfig.json --noEmit",
+    "madge": "madge --ts-config ./apps/worker-1/tsconfig.json --circular --no-color --no-spinner --extensions ts,tsx src",
+    "dev": "wrangler dev --config apps/worker-1/wrangler.jsonc --config apps/worker-2/wrangler.jsonc",
+    "cf-typegen": "wrangler types --cwd ./apps/worker-1 --config ./wrangler.jsonc && wrangler types --cwd apps/worker-2 --config ./wrangler.jsonc"
   },
   "browserslist": {
     "production": [
@@ -34,7 +32,6 @@
   },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.8.27",
-    "@cloudflare/workers-types": "^4.20250510.0",
     "@effect/eslint-plugin": "^0.3.2",
     "@effect/language-service": "^0.12.1",
     "@eslint/compat": "1.2.9",

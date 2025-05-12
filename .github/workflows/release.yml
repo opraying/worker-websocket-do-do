@@ -52,7 +52,7 @@ jobs:
         run: echo "PROJECT_NAME=$(jq -r .name package.json)" >> $GITHUB_ENV
 
       - name: 🚀 Deploy Worker-2 to Cloudflare
-        id: deploy worker
+        id: deploy-worker
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -60,7 +60,7 @@ jobs:
           workingDirectory: apps/worker-1
 
       - name: 🚀 Deploy Worker-2 to Cloudflare
-        id: deploy worker-2
+        id: deploy-worker-2
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}

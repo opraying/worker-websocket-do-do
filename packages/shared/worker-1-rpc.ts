@@ -12,7 +12,7 @@ export class WorkersRpcs extends RpcGroup.make(
   Rpc.make("echo", {
     success: Schema.String
   }),
-  Rpc.make("dates", {
+  Rpc.make("date", {
     success: Schema.DateTimeUtc,
     stream: true
   })

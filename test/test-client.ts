@@ -17,7 +17,7 @@ const program = Effect.gen(function*() {
     Effect.fork
   )
 
-  yield* client.dates().pipe(
+  yield* client.date().pipe(
     Stream.tap((_) => Effect.log("date", _)),
     Stream.runDrain,
     Effect.fork

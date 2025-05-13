@@ -21,7 +21,7 @@ export const WorkersRpcLive = Worker1Rpc.WorkersRpcs.toLayer(
           return message + ` - [worker-1-${Date.now()}]`
         }
       ),
-      dates: () =>
+      date: () =>
         Effect.gen(function*() {
           const client = yield* worker2Rpc.useClient
 

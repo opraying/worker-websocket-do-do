@@ -1,30 +1,32 @@
-import * as Rpc_ from "@shared/rpc"
+import * as RpcServer from "@shared/rpc"
 import { SerializationLive, UsersRpcs } from "@shared/worker-1-rpc"
-import { RpcFetcher, WorkerRpcClient as Worker2RpcClient } from "@shared/worker-2-rpc"
+import { WorkerRpcClient as Worker2RpcClient } from "@shared/worker-2-rpc"
 import { DurableObject } from "cloudflare:workers"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as Logger from "effect/Logger"
 import * as LogLevel from "effect/LogLevel"
 
-const Worker2RpcClientLive = Worker2RpcClient.Default.pipe(
-  Layer.provide(Layer.suspend(() => Layer.succeed(RpcFetcher, globalThis.env.Worker2)))
-)
 export const UsersLive = UsersRpcs.toLayer(
   Effect.gen(function*() {
     return {
-      hi: Effect.fn(function*() {
-        const worker2 = yield* Worker2RpcClient
-        const res = yield* worker2.hi()
+      hi: Effect.fn(
+        function*() {
+          const client = yield* Worker2RpcClient.useClient
+          const message = yield* client.hi()
 
-        return res + "-" + "[worker-1]"
-      }, Effect.provide(Worker2RpcClientLive))
+          return message + "-" + "[worker-1]"
+        },
+        Effect.provide(
+          Worker2RpcClient.Live
+        )
+      )
     }
   })
 )
 
 export class TestDurableObject extends DurableObject<Env> {
-  private rpcServer: ReturnType<ReturnType<typeof Rpc_["make"]>>
+  private rpcServer: ReturnType<ReturnType<typeof RpcServer["make"]>>
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env)
@@ -42,19 +44,20 @@ export class TestDurableObject extends DurableObject<Env> {
       UsersLive,
       SerializationLive
     ).pipe(
+      // Layer.provide(
+      //   Worker2RpcClient.Live
+      // ),
       Layer.provide(Logger.pretty),
       Layer.provide(Logger.minimumLogLevel(LogLevel.All))
     )
 
-    const makeRpcServer = Rpc_.make(UsersRpcs, Live, {
+    const makeRpcServer = RpcServer.make(UsersRpcs, Live, {
       onWrite: (data) => {
         this.broadcast(data)
       }
     })
 
-    this.rpcServer = makeRpcServer({
-      concurrency: "unbounded"
-    })
+    this.rpcServer = makeRpcServer({ concurrency: "unbounded" })
 
     this.ctx.blockConcurrencyWhile(async () => {
       await this.rpcServer.init()
@@ -81,9 +84,8 @@ export class TestDurableObject extends DurableObject<Env> {
 
   async webSocketMessage(_ws: WebSocket, message: ArrayBuffer): Promise<void> {
     const data = message instanceof Uint8Array ? message : new Uint8Array(message)
-    await this.rpcServer.send(
-      data
-    ).catch((e) => console.error("ws rpc handle error", e))
+
+    await this.rpcServer.send(data).catch((e) => console.error("ws rpc handle error", e))
   }
 
   webSocketError(_ws: WebSocket, error: unknown): void | Promise<void> {
@@ -94,8 +96,9 @@ export class TestDurableObject extends DurableObject<Env> {
     try {
       ws.close()
     } catch {
-      //
+      // ignore
     }
+
     await this.rpcServer.dispose().catch((_) => console.error("ws close error", _))
   }
 }

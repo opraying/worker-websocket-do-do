@@ -21,6 +21,10 @@
     {
       "binding": "Worker1",
       "service": "worker-websocket-do-worker-1"
+    },
+    {
+      "binding": "Worker2",
+      "service": "worker-websocket-do-worker-2"
     }
   ]
 }

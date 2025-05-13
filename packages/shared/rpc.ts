@@ -4,15 +4,15 @@ import type * as Rpc from "@effect/rpc/Rpc"
 import type * as RpcGroup from "@effect/rpc/RpcGroup"
 import type * as RpcSerialization from "@effect/rpc/RpcSerialization"
 import * as RpcServer from "@effect/rpc/RpcServer"
-import { ManagedRuntime } from "effect"
 import * as Context from "effect/Context"
 import * as Deferred from "effect/Deferred"
 import * as Effect from "effect/Effect"
 import * as FiberSet from "effect/FiberSet"
 import * as Layer from "effect/Layer"
+import * as ManagedRuntime from "effect/ManagedRuntime"
 import * as Scope from "effect/Scope"
 
-export const layerDurableObject = <Rpcs extends Rpc.Any>(
+const layerWebsocketHttpApp = <Rpcs extends Rpc.Any>(
   group: RpcGroup.RpcGroup<Rpcs>,
   options?:
     | {
@@ -46,13 +46,6 @@ export const layerDurableObject = <Rpcs extends Rpc.Any>(
     })
   )
 
-export const Streams = Context.GenericTag<
-  {
-    messagesStream: TransformStream<Uint8Array, Uint8Array>
-    broadcastStream: TransformStream<Uint8Array, Uint8Array>
-  }
->("Streams")
-
 export const make = <Rpcs extends Rpc.Any, LA = never>(
   group: RpcGroup.RpcGroup<Rpcs>,
   layer: Layer.Layer<RpcSerialization.RpcSerialization | Rpc.ToHandler<Rpcs> | LA, never, never>,
@@ -60,10 +53,6 @@ export const make = <Rpcs extends Rpc.Any, LA = never>(
     onWrite: (_: Uint8Array) => void
   }
 ) => {
-  let initialized = false
-  const memo = Effect.runSync(Layer.makeMemoMap)
-  const emitter = new EventEmitter()
-
   return (
     options?:
       | {
@@ -73,7 +62,11 @@ export const make = <Rpcs extends Rpc.Any, LA = never>(
       }
       | undefined
   ) => {
-    const Full: Layer.Layer<Socket.Socket, never, never> = layerDurableObject(group, options).pipe(
+    let initialized = false
+    const memo = Effect.runSync(Layer.makeMemoMap)
+    const emitter = new EventEmitter()
+
+    const Full: Layer.Layer<Socket.Socket, never, never> = layerWebsocketHttpApp(group, options).pipe(
       Layer.provide(layer),
       Layer.provide(Layer.effectDiscard(Effect.sync(() => emitter.on("response", (data) => _.onWrite(data))))),
       Layer.provideMerge(Layer.effect(Socket.Socket, fromEvents(Effect.succeed(emitter)))),
@@ -172,8 +165,12 @@ const fromEvents = <R>(acquire: Effect.Effect<EventEmitter, Socket.SocketError, 
                 }
               })
 
-              stream.on("done", () => {
-                callback(Effect.fail(new Socket.SocketCloseError({ reason: "Close", code: 1000 })))
+              stream.on("done", (code: number, closeReason?: string | undefined) => {
+                callback(
+                  Effect.fail(
+                    new Socket.SocketCloseError({ reason: "Close", code: code ?? 1000, closeReason })
+                  )
+                )
               })
             }
           ).pipe(

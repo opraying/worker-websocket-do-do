@@ -8,7 +8,7 @@ import * as Logger from "effect/Logger"
 import * as LogLevel from "effect/LogLevel"
 import * as Stream from "effect/Stream"
 
-export const UsersLive = Worker2Rpc.WorkersRpcs.toLayer(
+export const WorkersRpcLive = Worker2Rpc.WorkersRpcs.toLayer(
   Effect.gen(function*() {
     return {
       echo: Effect.fn(function*() {
@@ -39,7 +39,7 @@ export class TestDurableObject extends DurableObject<Env> {
 
     this.ctx.setHibernatableWebSocketEventTimeout(5000)
 
-    const Live = Layer.mergeAll(UsersLive, Worker2Rpc.SerializationLive).pipe(
+    const Live = Layer.mergeAll(WorkersRpcLive, Worker2Rpc.SerializationLive).pipe(
       Layer.provide(Logger.pretty),
       Layer.provide(Logger.minimumLogLevel(LogLevel.All))
     )

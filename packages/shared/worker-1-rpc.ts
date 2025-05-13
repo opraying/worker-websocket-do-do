@@ -8,16 +8,20 @@ import { makeRpcClient } from "./rpc-client"
 
 export const SerializationLive = RpcSerialization.layerMsgPack
 
-export class UsersRpcs extends RpcGroup.make(
-  Rpc.make("hi", {
+export class WorkersRpcs extends RpcGroup.make(
+  Rpc.make("echo", {
     success: Schema.String
+  }),
+  Rpc.make("dates", {
+    success: Schema.DateTimeUtc,
+    stream: true
   })
 ) {
-  static make = RpcClient.make(UsersRpcs)
+  static make = RpcClient.make(WorkersRpcs)
 }
 
-export class WorkerRpcClient extends makeRpcClient("WorkerRpcClient", UsersRpcs.make) {
-  static Live = this.Websocket("http:/localhost:8787").pipe(
-    Layer.provide(SerializationLive)
+export class WorkerRpcClient extends makeRpcClient("WorkerRpcClient", WorkersRpcs.make) {
+  static Live = this.Websocket("ws:/localhost:8787").pipe(
+    Layer.provideMerge(SerializationLive)
   )
 }

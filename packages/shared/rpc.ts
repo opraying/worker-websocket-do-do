@@ -88,8 +88,10 @@ export const make = <Rpcs extends Rpc.Any, LA = never>(
     }
 
     const dispose = async () => {
-      // emitter.emit("done", {})
       initialized = false
+
+      // I think this is unnecessary in a Cloudflare environment.
+      // emitter.emit("done", {})
 
       try {
         await runtime.dispose()

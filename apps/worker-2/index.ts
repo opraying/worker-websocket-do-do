@@ -1,17 +1,25 @@
 import * as RpcServer from "@shared/rpc"
-import { SerializationLive, UsersRpcs } from "@shared/worker-2-rpc"
+import * as Worker2Rpc from "@shared/worker-2-rpc"
 import { DurableObject } from "cloudflare:workers"
+import * as DateTime from "effect/DateTime"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as Logger from "effect/Logger"
 import * as LogLevel from "effect/LogLevel"
+import * as Stream from "effect/Stream"
 
-export const UsersLive = UsersRpcs.toLayer(
+export const UsersLive = Worker2Rpc.WorkersRpcs.toLayer(
   Effect.gen(function*() {
     return {
-      hi: Effect.fn(function*() {
-        return "[worker-2]"
-      })
+      echo: Effect.fn(function*() {
+        return `[worker-2-${Date.now()}]`
+      }),
+      date: () =>
+        Effect.gen(function*() {
+          yield* Effect.sleep(200)
+          const date = yield* DateTime.now
+          return date
+        }).pipe(Stream.repeatEffect)
     }
   })
 )
@@ -31,12 +39,12 @@ export class TestDurableObject extends DurableObject<Env> {
 
     this.ctx.setHibernatableWebSocketEventTimeout(5000)
 
-    const Live = Layer.mergeAll(UsersLive, SerializationLive).pipe(
+    const Live = Layer.mergeAll(UsersLive, Worker2Rpc.SerializationLive).pipe(
       Layer.provide(Logger.pretty),
       Layer.provide(Logger.minimumLogLevel(LogLevel.All))
     )
 
-    const makeRpcServer = RpcServer.make(UsersRpcs, Live, {
+    const makeRpcServer = RpcServer.make(Worker2Rpc.WorkersRpcs, Live, {
       onWrite: (data) => {
         this.broadcast(data)
       }

@@ -1,26 +1,32 @@
 import * as RpcServer from "@shared/rpc"
-import { SerializationLive, UsersRpcs } from "@shared/worker-1-rpc"
+import * as Worker1Rpc from "@shared/worker-1-rpc"
 import { WorkerRpcClient as Worker2RpcClient } from "@shared/worker-2-rpc"
 import { DurableObject } from "cloudflare:workers"
 import * as Effect from "effect/Effect"
+import { pipe } from "effect/Function"
 import * as Layer from "effect/Layer"
 import * as Logger from "effect/Logger"
 import * as LogLevel from "effect/LogLevel"
+import * as Stream from "effect/Stream"
 
-export const UsersLive = UsersRpcs.toLayer(
+export const Workers1RpcLive = Worker1Rpc.WorkersRpcs.toLayer(
   Effect.gen(function*() {
+    const worker2Rpc = yield* Worker2RpcClient
     return {
-      hi: Effect.fn(
+      echo: Effect.fn(
         function*() {
-          const client = yield* Worker2RpcClient.useClient
-          const message = yield* client.hi()
+          const client = yield* worker2Rpc.useClient
+          const message = yield* client.echo()
 
-          return message + "-" + "[worker-1]"
-        },
-        Effect.provide(
-          Worker2RpcClient.Live
-        )
-      )
+          return message + ` - [worker-1-${Date.now()}]`
+        }
+      ),
+      dates: () =>
+        Effect.gen(function*() {
+          const client = yield* worker2Rpc.useClient
+
+          return pipe(client.date(), Stream.take(10))
+        }).pipe(Stream.unwrap)
     }
   })
 )
@@ -41,17 +47,15 @@ export class TestDurableObject extends DurableObject<Env> {
     this.ctx.setHibernatableWebSocketEventTimeout(5000)
 
     const Live = Layer.mergeAll(
-      UsersLive,
-      SerializationLive
+      Workers1RpcLive,
+      Worker1Rpc.SerializationLive
     ).pipe(
-      // Layer.provide(
-      //   Worker2RpcClient.Live
-      // ),
+      Layer.provide(Worker2RpcClient.Live),
       Layer.provide(Logger.pretty),
       Layer.provide(Logger.minimumLogLevel(LogLevel.All))
     )
 
-    const makeRpcServer = RpcServer.make(UsersRpcs, Live, {
+    const makeRpcServer = RpcServer.make(Worker1Rpc.WorkersRpcs, Live, {
       onWrite: (data) => {
         this.broadcast(data)
       }

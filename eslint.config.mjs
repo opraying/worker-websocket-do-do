@@ -25,7 +25,8 @@ export default defineConfig([
     "**/node_modules",
     "**/dist",
     "**/build",
-    "**/docs"
+    "**/docs",
+    "**/.wrangler"
   ]),
   ...compat
     .extends(

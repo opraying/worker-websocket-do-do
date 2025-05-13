@@ -63,17 +63,16 @@ export const make = <Rpcs extends Rpc.Any, LA = never>(
       | undefined
   ) => {
     let initialized = false
-    const memo = Effect.runSync(Layer.makeMemoMap)
     const emitter = new EventEmitter()
 
-    const Full: Layer.Layer<Socket.Socket, never, never> = layerWebsocketHttpApp(group, options).pipe(
+    const Live: Layer.Layer<never> = layerWebsocketHttpApp(group, options).pipe(
       Layer.provide(layer),
       Layer.provide(Layer.effectDiscard(Effect.sync(() => emitter.on("response", (data) => _.onWrite(data))))),
-      Layer.provideMerge(Layer.effect(Socket.Socket, fromEvents(Effect.succeed(emitter)))),
+      Layer.provide(Layer.effect(Socket.Socket, fromEvents(Effect.succeed(emitter)))),
       Layer.provide(Layer.scope)
     )
 
-    let runtime = ManagedRuntime.make(Full, memo)
+    let runtime = ManagedRuntime.make(Live)
 
     const init = async () => {
       await runtime.runtime()
@@ -99,7 +98,7 @@ export const make = <Rpcs extends Rpc.Any, LA = never>(
         // ignore
       }
 
-      runtime = ManagedRuntime.make(Full, memo)
+      runtime = ManagedRuntime.make(Live)
     }
 
     return { init, send, dispose }

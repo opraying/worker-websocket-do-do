@@ -1,4 +1,4 @@
-import { NodeRuntime } from "@effect/platform-node"
+import * as NodeRuntime from "@effect/platform-node/NodeRuntime"
 import { WorkerRpcClient } from "@shared/worker-1-rpc"
 import * as Effect from "effect/Effect"
 import * as Logger from "effect/Logger"

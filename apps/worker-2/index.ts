@@ -8,7 +8,7 @@ import * as Logger from "effect/Logger"
 import * as LogLevel from "effect/LogLevel"
 import * as Stream from "effect/Stream"
 
-export const WorkersRpcLive = Worker2Rpc.WorkersRpcs.toLayer(
+export const WorkersRpcLive = Worker2Rpc.WorkerRpcs.toLayer(
   Effect.gen(function*() {
     return {
       echo: Effect.fn(function*() {
@@ -44,7 +44,7 @@ export class TestDurableObject extends DurableObject<Env> {
       Layer.provide(Logger.minimumLogLevel(LogLevel.All))
     )
 
-    const makeRpcServer = RpcServer.make(Worker2Rpc.WorkersRpcs, Live, {
+    const makeRpcServer = RpcServer.make(Worker2Rpc.WorkerRpcs, Live, {
       onWrite: (data) => {
         this.broadcast(data)
       }
